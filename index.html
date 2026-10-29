@@ -154,9 +154,13 @@ function report(){var e=0,a=0,r="",t="تقرير تكلفة المزرعة - "+n
  var fd=+S.fd||1;
  r+='<tr class="tt"><td>الإجمالي</td><td>'+f(e)+'</td><td>'+f(a)+'</td><td class="'+(a>e?"over":"under")+'">'+f(a-e)+'</td></tr>';
  document.getElementById("rep").innerHTML='<div class="tw"><table><thead><tr><th>البند</th><th>التقدير</th><th>الفعلي</th><th>الفرق</th></tr></thead><tbody>'+r+'</tbody></table></div><p class="rs">عدد الفدادين: '+f(fd)+' | تكلفة الفدان (فعلي): '+f(a/fd)+' ج | (تقدير): '+f(e/fd)+' ج'+(rcTot()?' | المدفوع: '+f(rcTot())+' | الرصيد: '+f(rcTot()-a):'')+'</p>'+rcRep(a);
- t+="\n\nالإجمالي: تقدير "+f(e)+" | فعلي "+f(a)+" | الفرق "+f(a-e)+"\nتكلفة الفدان (فعلي): "+f(a/fd)+" ج";var rr=rcTot();if(rr)t+="\nالمبالغ اللي تم دفعها: "+f(rr)+" | الرصيد: "+f(rr-a);
- var pl=rcRows();if(pl.length){t+="\n\nالدفعات:";pl.forEach(function(x){t+="\n   - "+(x.n||"دفعة")+(x.d?" ("+fdt(x.d)+")":"")+": "+f(+x.v||0)})}REP=t}
+ t+="\n\nالإجمالي: تقدير "+f(e)+" | فعلي "+f(a)+" | الفرق "+f(a-e)+"\nتكلفة الفدان (فعلي): "+f(a/fd)+" ج";var rr=rcTot();if(rr)t+="\nالمبالغ اللي تم دفعها: "+f(rr)+" | الرصيد: "+f(rr-a);t+=rcTxt();REP=t}
 function rcRows(){return (S.rc||[]).filter(function(x){return +x.v||x.n})}
+function rcTxt(){var pl=rcRows(),t="";if(pl.length){t="\n\nالدفعات:";pl.forEach(function(x){t+="\n   - "+(x.n||"دفعة")+(x.d?" ("+fdt(x.d)+")":"")+": "+f(+x.v||0)})}return t}
+function pdfRc(td,th,tt,a){var pl=rcRows();if(!pl.length)return "";var r="",s=0;
+ pl.forEach(function(x){s+=+x.v||0;r+='<tr><td style="'+td+'">'+esc(x.n||"دفعة")+'</td><td style="'+td+'text-align:center">'+(x.d?fdt(x.d):"-")+'</td><td style="'+td+'text-align:center">'+f(+x.v||0)+'</td></tr>'});
+ return '<div style="margin-top:22px;font-size:16px;font-weight:700;color:#2e7d32">الدفعات</div><table style="width:100%;border-collapse:collapse;margin-top:8px"><thead><tr><th style="'+th+'text-align:right">البيان</th><th style="'+th+'">التاريخ</th><th style="'+th+'">المبلغ</th></tr></thead><tbody>'+r+
+ '<tr><td style="'+tt+'text-align:right">إجمالي المدفوع</td><td style="'+tt+'"></td><td style="'+tt+'">'+f(s)+'</td></tr><tr><td style="'+tt+'text-align:right">الرصيد (المدفوع - الفعلي)</td><td style="'+tt+'"></td><td style="'+tt+'color:'+(s-a<0?"#b5481d":"#1b5e20")+'">'+f(s-a)+'</td></tr></tbody></table>'}
 function rcRep(a){var pl=rcRows();if(!pl.length)return "";var r="",s=0;
  pl.forEach(function(x){s+=+x.v||0;r+='<tr><td>'+esc(x.n||"دفعة")+'</td><td>'+(x.d?fdt(x.d):"-")+'</td><td>'+f(+x.v||0)+'</td></tr>'});
  return '<h3 class="rs" style="font-size:15px;color:var(--green);margin-top:14px">الدفعات</h3><div class="tw"><table><thead><tr><th>البيان</th><th>التاريخ</th><th>المبلغ</th></tr></thead><tbody>'+r+'<tr class="tt"><td>إجمالي المدفوع</td><td></td><td>'+f(s)+'</td></tr><tr class="tt"><td>الرصيد (المدفوع - الفعلي)</td><td></td><td class="'+(s-a<0?"over":"under")+'">'+f(s-a)+'</td></tr></tbody></table></div>'}
@@ -296,7 +300,7 @@ function xlBuild(){
  return wb;
 }
 function sumTxt(){var e=0,a=0;S.items.forEach(function(x){e+=+x.e||0;a+=+x.a||0});var fd=+S.fd||1;
- return "تقرير تكلفة مزرعة اطفيح - "+new Date().toLocaleDateString("ar-EG")+"\nإجمالي التقدير: "+f(e)+" ج\nإجمالي الفعلي: "+f(a)+" ج\nالباقي: "+f(e-a)+" ج\nتكلفة الفدان (فعلي): "+f(a/fd)+" ج"+(rcTot()?"\nالمبالغ اللي تم دفعها: "+f(rcTot())+" ج\nالرصيد: "+f(rcTot()-a)+" ج":"")}
+ return "تقرير تكلفة مزرعة اطفيح - "+new Date().toLocaleDateString("ar-EG")+"\nإجمالي التقدير: "+f(e)+" ج\nإجمالي الفعلي: "+f(a)+" ج\nالباقي: "+f(e-a)+" ج\nتكلفة الفدان (فعلي): "+f(a/fd)+" ج"+(rcTot()?"\nالمبالغ اللي تم دفعها: "+f(rcTot())+" ج\nالرصيد: "+f(rcTot()-a)+" ج":"")+rcTxt()}
 function go(u){var a=document.createElement("a");a.href=u;a.target="_blank";a.rel="noopener";document.body.appendChild(a);a.click();document.body.removeChild(a)}
 function pdfHtml(){
  var e=0,a=0,fd=+S.fd||1,r="",td="padding:8px 10px;border:1px solid #bfdcb8;font-size:14px;",th="padding:9px 10px;background:#2e7d32;color:#fff;border:1px solid #2e7d32;font-size:14px;";
@@ -309,7 +313,7 @@ function pdfHtml(){
  '<div style="margin:10px 0 14px;color:#557356;font-size:13px">'+new Date().toLocaleDateString("ar-EG")+' | عدد الفدادين: '+f(fd)+'</div>'+
  '<table style="width:100%;border-collapse:collapse"><thead><tr><th style="'+th+'text-align:right">البند</th><th style="'+th+'">التقدير</th><th style="'+th+'">الفعلي</th><th style="'+th+'">الفرق</th></tr></thead><tbody>'+r+
  '<tr><td style="'+tt+'text-align:right">الإجمالي</td><td style="'+tt+'">'+f(e)+'</td><td style="'+tt+'">'+f(a)+'</td><td style="'+tt+'">'+f(a-e)+'</td></tr></tbody></table>'+
- '<div style="margin-top:14px;font-size:14px">تكلفة الفدان (فعلي): '+f(a/fd)+' ج | (تقدير): '+f(e/fd)+' ج</div>'+(rcTot()?'<div style="margin-top:8px;font-size:14px;font-weight:700;color:#1b5e20">المبالغ اللي تم دفعها: '+f(rcTot())+' ج | الرصيد المتبقي: '+f(rcTot()-a)+' ج</div>':'')+pdfChart()+'</div>'}
+ '<div style="margin-top:14px;font-size:14px">تكلفة الفدان (فعلي): '+f(a/fd)+' ج | (تقدير): '+f(e/fd)+' ج</div>'+(rcTot()?'<div style="margin-top:8px;font-size:14px;font-weight:700;color:#1b5e20">المبالغ اللي تم دفعها: '+f(rcTot())+' ج | الرصيد المتبقي: '+f(rcTot()-a)+' ج</div>':'')+pdfRc(td,th,tt,a)+pdfChart()+'</div>'}
 function pdfChart(){var mx=0,h="";S.items.forEach(function(x){mx=Math.max(mx,+x.e||0,+x.a||0)});if(!mx)return "";
  S.items.forEach(function(x){var e=+x.e||0,a=+x.a||0;if(!e&&!a)return;function w(v){return (v/mx*100)+"%"}
   var bar='display:block;height:9px;',ex=a>e&&e;
