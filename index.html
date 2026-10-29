@@ -46,6 +46,21 @@ input:focus-visible,button:focus-visible{outline:2px solid var(--green);outline-
 .tg{display:flex;gap:8px;justify-content:flex-end;margin-bottom:8px}.tg button{margin:0}
 #ud{position:fixed;bottom:calc(16px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);border-radius:999px;padding:8px 10px 8px 18px;display:flex;gap:12px;align-items:center;box-shadow:0 4px 14px rgba(0,0,0,.3);z-index:8;font-size:14px;max-width:calc(100% - 32px)}
 #ud button{background:var(--green);color:#fff;border:0;border-radius:999px;padding:6px 14px;font:inherit;font-weight:700;cursor:pointer}
+.viz{--est:#2a78d6;--act:#2e7d32;position:relative;background:var(--card);border-radius:16px;padding:12px 14px;box-shadow:0 2px 8px rgba(30,80,40,.12)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .viz{--est:#3987e5;--act:#3f9a44}}
+:root[data-theme="dark"] .viz{--est:#3987e5;--act:#3f9a44}
+.lg{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12px;color:var(--mute);margin-bottom:6px}.lg i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-inline-end:6px;vertical-align:-1px}
+.lg .lx{background:repeating-linear-gradient(135deg,var(--act) 0 2px,transparent 2px 5px);box-shadow:inset 0 0 0 1px var(--act)}
+.cr{padding:6px 6px 7px;margin:0 -6px;border-radius:10px}.cr:hover,.cr:focus-visible{background:var(--bg)}
+.cn{display:flex;justify-content:space-between;gap:10px;font-size:13px}.cn>span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cv{color:var(--mute);font-size:12px;white-space:nowrap}.cv .ow{color:var(--warn);font-weight:700}
+.cb{display:flex;gap:2px;height:8px;margin-top:4px}
+.cb i{display:block;height:100%;min-width:2px;border-start-end-radius:4px;border-end-end-radius:4px}
+.cb i.sq{border-radius:0}
+.ce{background:var(--est)}.ca{background:var(--act)}
+.cx{background:repeating-linear-gradient(135deg,var(--act) 0 2px,transparent 2px 5px);box-shadow:inset 0 0 0 1px var(--act)}
+.c0{font-size:13px;color:var(--mute)}
+#tip{position:absolute;inset-inline-start:14px;pointer-events:none;background:var(--ink);color:var(--bg);font-size:12px;line-height:1.7;padding:6px 10px;border-radius:10px;z-index:5;box-shadow:0 4px 12px rgba(0,0,0,.25)}
 .feddan{display:flex;align-items:center;gap:8px;margin-bottom:12px}
 .feddan input{width:90px}
 </style>
@@ -72,6 +87,9 @@ input:focus-visible,button:focus-visible{outline:2px solid var(--green);outline-
 <div id="ov" hidden style="position:fixed;inset:0;background:rgba(0,0,0,.88);display:flex;align-items:center;justify-content:center;z-index:9"><img id="ovi" alt="" style="max-width:96%;max-height:96%"></div>
 
 <div class="add"><input id="nn" placeholder="اسم بند جديد"><button class="btn" id="ab">إضافة بند</button></div>
+
+<h2>مقارنة التقدير بالفعلي</h2>
+<div class="viz" id="viz"><div class="lg"><span><i class="ce"></i>التقدير</span><span><i class="ca"></i>الفعلي</span><span><i class="lx"></i>زيادة عن التقدير</span></div><div id="chart"></div><div id="tip" hidden></div></div>
 
 <h2>التقرير</h2>
 <div id="rep"></div>
@@ -131,7 +149,24 @@ function report(){var e=0,a=0,r="",t="تقرير تكلفة المزرعة - "+n
  r+='<tr class="tt"><td>الإجمالي</td><td>'+f(e)+'</td><td>'+f(a)+'</td><td class="'+(a>e?"over":"under")+'">'+f(a-e)+'</td></tr>';
  document.getElementById("rep").innerHTML='<div class="tw"><table><thead><tr><th>البند</th><th>التقدير</th><th>الفعلي</th><th>الفرق</th></tr></thead><tbody>'+r+'</tbody></table></div><p class="rs">عدد الفدادين: '+f(fd)+' | تكلفة الفدان (فعلي): '+f(a/fd)+' ج | (تقدير): '+f(e/fd)+' ج</p>';
  t+="\n\nالإجمالي: تقدير "+f(e)+" | فعلي "+f(a)+" | الفرق "+f(a-e)+"\nتكلفة الفدان (فعلي): "+f(a/fd)+" ج";REP=t}
-function totals(){report();
+function chart(){
+ var it=S.items,mx=0,h="";it.forEach(function(x){mx=Math.max(mx,+x.e||0,+x.a||0)});
+ it.forEach(function(x,i){var e=+x.e||0,a=+x.a||0;if(!e&&!a)return;
+  function w(v){return (v/mx*100)+"%"}
+  var act=a>e&&e?'<i class="ca sq" style="width:'+w(e)+'"></i><i class="cx" style="width:'+w(a-e)+'"></i>':(a?'<i class="ca" style="width:'+w(a)+'"></i>':'');
+  h+='<div class="cr" data-c="'+i+'" tabindex="0"><div class="cn"><span>'+esc(x.n)+'</span><span class="cv">'+f(a)+' من '+f(e)+(a>e?' <span class="ow">⚠ زيادة '+f(a-e)+'</span>':'')+'</span></div>'+
+   '<div class="cb">'+(e?'<i class="ce" style="width:'+w(e)+'"></i>':'')+'</div><div class="cb">'+act+'</div></div>'});
+ $("chart").innerHTML=h||'<div class="c0">اكتب التقدير أو سجّل مصروف عشان يظهر الرسم.</div>';
+}
+function tipShow(row){var it=S.items[+row.dataset.c];if(!it)return;var t=$("tip"),e=+it.e||0,a=+it.a||0,d=a-e;
+ t.innerHTML='<b>'+esc(it.n)+'</b><br>التقدير: '+f(e)+' ج<br>الفعلي: '+f(a)+' ج'+(e?'<br>نسبة الصرف: '+f(a/e*100)+'٪':'')+(a?'<br>'+(d>0?'زيادة: '+f(d):'متبقي: '+f(-d))+' ج':'');
+ t.hidden=false;var top=row.offsetTop-t.offsetHeight-4;t.style.top=(top<0?row.offsetTop+row.offsetHeight+4:top)+"px"}
+function tipHide(){$("tip").hidden=true}
+$("chart").addEventListener("pointerover",function(ev){var r=ev.target.closest(".cr");if(r)tipShow(r)});
+$("chart").addEventListener("pointerleave",tipHide);
+$("chart").addEventListener("focusin",function(ev){var r=ev.target.closest(".cr");if(r)tipShow(r)});
+$("chart").addEventListener("focusout",tipHide);
+function totals(){report();chart();
  var e=0,a=0;S.items.forEach(function(x){e+=+x.e||0;a+=+x.a||0});
  var fd=+S.fd||1;
  document.getElementById("sAct").textContent=f(a)+" ج";
@@ -254,7 +289,14 @@ function pdfHtml(){
  '<div style="margin:10px 0 14px;color:#557356;font-size:13px">'+new Date().toLocaleDateString("ar-EG")+' | عدد الفدادين: '+f(fd)+'</div>'+
  '<table style="width:100%;border-collapse:collapse"><thead><tr><th style="'+th+'text-align:right">البند</th><th style="'+th+'">التقدير</th><th style="'+th+'">الفعلي</th><th style="'+th+'">الفرق</th></tr></thead><tbody>'+r+
  '<tr><td style="'+tt+'text-align:right">الإجمالي</td><td style="'+tt+'">'+f(e)+'</td><td style="'+tt+'">'+f(a)+'</td><td style="'+tt+'">'+f(a-e)+'</td></tr></tbody></table>'+
- '<div style="margin-top:14px;font-size:14px">تكلفة الفدان (فعلي): '+f(a/fd)+' ج | (تقدير): '+f(e/fd)+' ج</div></div>'}
+ '<div style="margin-top:14px;font-size:14px">تكلفة الفدان (فعلي): '+f(a/fd)+' ج | (تقدير): '+f(e/fd)+' ج</div>'+pdfChart()+'</div>'}
+function pdfChart(){var mx=0,h="";S.items.forEach(function(x){mx=Math.max(mx,+x.e||0,+x.a||0)});if(!mx)return "";
+ S.items.forEach(function(x){var e=+x.e||0,a=+x.a||0;if(!e&&!a)return;function w(v){return (v/mx*100)+"%"}
+  var bar='display:block;height:9px;border-radius:0 0 0 0;',ex=a>e&&e;
+  h+='<div style="margin-bottom:9px"><div style="display:flex;justify-content:space-between;font-size:12px"><span>'+esc(x.n)+'</span><span style="color:#557356">'+f(a)+' من '+f(e)+(a>e?' <b style="color:#b5481d">زيادة '+f(a-e)+'</b>':'')+'</span></div>'+
+  '<div style="display:flex;margin-top:3px">'+(e?'<i style="'+bar+'width:'+w(e)+';background:#2a78d6;border-radius:4px 0 0 4px"></i>':'')+'</div>'+
+  '<div style="display:flex;gap:2px;margin-top:2px">'+(ex?'<i style="'+bar+'width:'+w(e)+';background:#2e7d32"></i><i style="'+bar+'width:'+w(a-e)+';background:#2e7d32;opacity:.4;border-radius:4px 0 0 4px"></i>':(a?'<i style="'+bar+'width:'+w(a)+';background:#2e7d32;border-radius:4px 0 0 4px"></i>':''))+'</div></div>'});
+ return '<div style="margin-top:22px;font-size:16px;font-weight:700;color:#2e7d32">مقارنة التقدير بالفعلي</div><div style="font-size:12px;color:#557356;margin:4px 0 10px"><i style="display:inline-block;width:10px;height:10px;background:#2a78d6;border-radius:3px;vertical-align:-1px"></i> التقدير &nbsp; <i style="display:inline-block;width:10px;height:10px;background:#2e7d32;border-radius:3px;vertical-align:-1px"></i> الفعلي &nbsp; <i style="display:inline-block;width:10px;height:10px;background:#2e7d32;opacity:.4;border-radius:3px;vertical-align:-1px"></i> زيادة عن التقدير</div>'+h}
 function makePdf(cb,bad){
  if(!(window.html2canvas&&window.jspdf))return bad();
  var h=document.createElement("div");h.style.cssText="position:fixed;left:-10000px;top:0";h.innerHTML=pdfHtml();document.body.appendChild(h);
